@@ -1,198 +1,236 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import StatCard from "@/components/StatCard";
+import QuickActions from "@/components/QuickActions";
+import TranscriptionTable, { Transcription } from "@/components/TranscriptionTable";
 
 // ---------------------------------------------------------------------------
-// Loading skeleton
+// Mock data — replace with real API calls
 // ---------------------------------------------------------------------------
-function Skeleton({ width, height }: { width?: string; height?: string }) {
-  return (
-    <div
-      aria-hidden="true"
-      style={{
-        width: width ?? "100%",
-        height: height ?? "1rem",
-        borderRadius: "0.5rem",
-        background:
-          "linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%)",
-        backgroundSize: "200% 100%",
-        animation: "shimmer 1.4s ease-in-out infinite",
-      }}
-    />
-  );
-}
+
+const MOCK_TRANSCRIPTIONS: Transcription[] = [
+  {
+    id: "t1",
+    title: "Moonlight Sonata — Mvt. 1",
+    source: "recording_beethoven_01.mp3",
+    date: "2026-08-23T14:30:00Z",
+    duration: "5:12",
+    status: "ready",
+  },
+  {
+    id: "t2",
+    title: "Clair de Lune",
+    source: "clair_de_lune_take2.wav",
+    date: "2026-08-22T09:15:00Z",
+    duration: "4:48",
+    status: "exported",
+  },
+  {
+    id: "t3",
+    title: "Für Elise",
+    source: "fur_elise_practice.mp3",
+    date: "2026-08-24T18:05:00Z",
+    duration: "2:56",
+    status: "processing",
+  },
+  {
+    id: "t4",
+    title: "Nocturne in E-flat, Op.9 No.2",
+    source: "chopin_nocturne_raw.m4a",
+    date: "2026-08-21T11:45:00Z",
+    duration: "4:30",
+    status: "ready",
+  },
+  {
+    id: "t5",
+    title: "Gymnopédie No. 1",
+    source: "satie_gymnopedie.wav",
+    date: "2026-08-20T16:20:00Z",
+    duration: "3:08",
+    status: "failed",
+  },
+];
 
 // ---------------------------------------------------------------------------
-// Empty sheet card
+// Stat icons
 // ---------------------------------------------------------------------------
-function SheetCard({
-  icon,
-  title,
-  subtitle,
-}: {
-  icon: string;
-  title: string;
-  subtitle: string;
-}) {
-  return (
-    <div className="sheet-card glass-card">
-      <div className="sheet-card-icon" aria-hidden="true">
-        {icon}
-      </div>
-      <p className="sheet-card-title">{title}</p>
-      <p className="sheet-card-sub">{subtitle}</p>
-    </div>
-  );
-}
+
+const IconSheets = (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
+  </svg>
+);
+
+const IconMidi = (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="8" width="20" height="8" rx="2" />
+    <path d="M6 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2" />
+    <line x1="6" y1="12" x2="6" y2="12" strokeWidth="3" strokeLinecap="round" />
+    <line x1="10" y1="12" x2="10" y2="12" strokeWidth="3" strokeLinecap="round" />
+    <line x1="14" y1="12" x2="14" y2="12" strokeWidth="3" strokeLinecap="round" />
+    <line x1="18" y1="12" x2="18" y2="12" strokeWidth="3" strokeLinecap="round" />
+  </svg>
+);
+
+const IconQueue = (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </svg>
+);
 
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
 export default function DashboardPage() {
-  const { user, loading, logout } = useAuth();
-  const router = useRouter();
+  const { user, loading } = useAuth();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/login");
-    }
-  }, [loading, user, router]);
+  const readyCount   = MOCK_TRANSCRIPTIONS.filter((t) => t.status === "ready").length;
+  const exportCount  = MOCK_TRANSCRIPTIONS.filter((t) => t.status === "exported").length;
+  const queueCount   = MOCK_TRANSCRIPTIONS.filter((t) => t.status === "processing").length;
+  const totalCount   = MOCK_TRANSCRIPTIONS.length;
 
-  const handleLogout = async () => {
-    await logout();
-    router.push("/login");
-  };
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 18) return "Good afternoon";
+    return "Good evening";
+  })();
 
   return (
-    <>
+    <div className="dashboard-page">
+
+      {/* ── Hero ── */}
+      <header className="dashboard-hero">
+        {loading ? (
+          <>
+            <div className="skeleton" style={{ width: 140, height: 13 }} />
+            <div className="skeleton" style={{ width: 300, height: 36, marginTop: 6 }} />
+          </>
+        ) : (
+          <>
+            <p className="dash-eyebrow">{greeting} 👋</p>
+            <h1 className="dash-headline">
+              Welcome back,{" "}
+              <span className="gradient-text">{user?.name?.split(" ")[0] ?? "Musician"}</span>
+            </h1>
+            <p className="dash-sub">Here's what's happening with your transcriptions today.</p>
+          </>
+        )}
+      </header>
+
+      {/* ── Stat cards ── */}
+      <section aria-label="Summary statistics" className="stats-grid">
+        <StatCard
+          icon={IconSheets}
+          label="Total Transcriptions"
+          value={loading ? "—" : totalCount}
+          color="indigo"
+          trend={{ direction: "up", label: "+2 this week" }}
+        />
+        <StatCard
+          icon={IconMidi}
+          label="Saved MIDI Files"
+          value={loading ? "—" : exportCount}
+          color="violet"
+          trend={{ direction: "neutral", label: "No change" }}
+        />
+        <StatCard
+          icon={IconQueue}
+          label="Processing Queue"
+          value={loading ? "—" : queueCount}
+          color="amber"
+          subtext={queueCount === 0 ? "Queue is empty" : undefined}
+        />
+      </section>
+
+      {/* ── Quick actions ── */}
+      <section aria-label="Quick actions" className="dashboard-section">
+        <QuickActions />
+      </section>
+
+      {/* ── Recent transcriptions ── */}
+      <section aria-label="Recent transcriptions" className="dashboard-section">
+        <div className="section-header">
+          <h2 className="section-title">Recent Transcriptions</h2>
+          <span className="section-badge">{totalCount} total</span>
+        </div>
+        <TranscriptionTable items={MOCK_TRANSCRIPTIONS} loading={loading} />
+      </section>
+
       <style>{`
-        /* ── Shimmer keyframes ── */
         @keyframes shimmer {
           0%   { background-position: 200% 0; }
           100% { background-position: -200% 0; }
         }
 
-        /* ── Layout ── */
-        .dash-root {
-          min-height: 100vh;
-          display: flex;
-          flex-direction: column;
-          background:
-            radial-gradient(ellipse 70% 50% at 90% 5%, rgba(99,102,241,0.12) 0%, transparent 55%),
-            var(--bg-base);
-        }
-
-        /* ── Navbar ── */
-        .dash-nav {
-          position: sticky;
-          top: 0;
-          z-index: 10;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 2rem;
-          height: 64px;
-          background: rgba(11,15,26,0.75);
-          border-bottom: 1px solid var(--glass-border);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-        }
-        .nav-logo {
-          display: flex;
-          align-items: center;
-          gap: 0.625rem;
-          text-decoration: none;
-        }
-        .nav-logo-icon {
-          width: 34px;
-          height: 34px;
+        .skeleton {
           border-radius: 0.5rem;
-          background: linear-gradient(135deg, var(--accent-from), var(--accent-to));
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 1.1rem;
-        }
-        .nav-logo-name {
-          font-weight: 700;
-          font-size: 1rem;
-          letter-spacing: -0.01em;
-        }
-        .nav-right {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-        .nav-user {
-          font-size: 0.875rem;
-          color: var(--text-muted);
-        }
-        .nav-user span {
-          color: var(--text-primary);
-          font-weight: 500;
-        }
-        .btn-logout {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.375rem;
-          padding: 0.45rem 1rem;
-          border-radius: 0.625rem;
-          border: 1px solid var(--glass-border);
-          background: rgba(255,255,255,0.04);
-          color: var(--text-muted);
-          font-size: 0.875rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: border-color 0.2s var(--ease-default),
-                      color 0.2s var(--ease-default),
-                      background 0.2s var(--ease-default);
-        }
-        .btn-logout:hover {
-          border-color: var(--accent-from);
-          color: var(--text-primary);
-          background: rgba(99,102,241,0.08);
+          background: linear-gradient(90deg,
+            rgba(255,255,255,0.04) 25%,
+            rgba(255,255,255,0.08) 50%,
+            rgba(255,255,255,0.04) 75%);
+          background-size: 200% 100%;
+          animation: shimmer 1.4s ease-in-out infinite;
         }
 
-        /* ── Main content ── */
-        .dash-main {
-          flex: 1;
-          max-width: 1024px;
-          width: 100%;
-          margin: 0 auto;
-          padding: 3rem 2rem 4rem;
+        /* ── Page layout ── */
+        .dashboard-page {
           display: flex;
           flex-direction: column;
-          gap: 2.5rem;
+          gap: 2rem;
         }
 
         /* ── Hero ── */
-        .dash-hero {
+        .dashboard-hero {
           display: flex;
           flex-direction: column;
-          gap: 0.375rem;
+          gap: 0.25rem;
         }
-        .dash-welcome {
+        .dash-eyebrow {
           margin: 0;
           font-size: 0.875rem;
-          color: var(--text-muted);
           font-weight: 500;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
+          color: var(--text-muted);
         }
-        .dash-name {
+        .dash-headline {
           margin: 0;
-          font-size: 2rem;
-          font-weight: 700;
-          letter-spacing: -0.03em;
-          line-height: 1.15;
+          font-size: clamp(1.6rem, 3vw, 2.25rem);
+          font-weight: 800;
+          letter-spacing: -0.04em;
+          line-height: 1.1;
+          color: var(--text-primary);
         }
-        .dash-email {
-          margin: 0;
+        .dash-sub {
+          margin: 0.375rem 0 0;
           font-size: 0.9rem;
           color: var(--text-muted);
+        }
+
+        /* ── Stats grid ── */
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 1rem;
+        }
+        @media (max-width: 768px) {
+          .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+        @media (max-width: 480px) {
+          .stats-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        /* ── Generic section ── */
+        .dashboard-section {
+          display: flex;
+          flex-direction: column;
+          gap: 0.875rem;
         }
 
         /* ── Section header ── */
@@ -200,229 +238,24 @@ export default function DashboardPage() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: 1rem;
         }
         .section-title {
           margin: 0;
-          font-size: 1.125rem;
-          font-weight: 600;
+          font-size: 1.0625rem;
+          font-weight: 700;
+          color: var(--text-primary);
+          letter-spacing: -0.02em;
         }
         .section-badge {
           font-size: 0.75rem;
           color: var(--text-muted);
           background: rgba(255,255,255,0.05);
           border: 1px solid var(--glass-border);
-          border-radius: 99px;
+          border-radius: 9999px;
           padding: 0.2rem 0.65rem;
-        }
-
-        /* ── Sheet cards grid ── */
-        .sheets-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-          gap: 1rem;
-        }
-        .sheet-card {
-          padding: 1.5rem 1.25rem;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0.625rem;
-          text-align: center;
-          transition: transform 0.2s var(--ease-default),
-                      box-shadow 0.2s var(--ease-default);
-        }
-        .sheet-card:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 8px 30px rgba(0,0,0,0.25);
-        }
-        .sheet-card-icon {
-          font-size: 2rem;
-          line-height: 1;
-        }
-        .sheet-card-title {
-          margin: 0;
-          font-size: 0.875rem;
-          font-weight: 600;
-          color: var(--text-primary);
-        }
-        .sheet-card-sub {
-          margin: 0;
-          font-size: 0.75rem;
-          color: var(--text-muted);
-          line-height: 1.45;
-        }
-
-        /* ── Empty state ── */
-        .empty-state {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 0.75rem;
-          padding: 3rem 2rem;
-          text-align: center;
-          border-radius: 1.25rem;
-          border: 1px dashed var(--glass-border);
-          color: var(--text-muted);
-        }
-        .empty-icon {
-          font-size: 2.5rem;
-          opacity: 0.6;
-        }
-        .empty-title {
-          margin: 0;
-          font-size: 1rem;
-          font-weight: 600;
-          color: var(--text-primary);
-        }
-        .empty-sub {
-          margin: 0;
-          font-size: 0.875rem;
-        }
-
-        /* ── Quick actions ── */
-        .quick-actions {
-          display: flex;
-          gap: 0.75rem;
-          flex-wrap: wrap;
-        }
-        .action-chip {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.4rem;
-          padding: 0.55rem 1.1rem;
-          border-radius: 0.625rem;
-          border: 1px solid var(--glass-border);
-          background: rgba(255,255,255,0.04);
-          color: var(--text-muted);
-          font-size: 0.875rem;
           font-weight: 500;
-          cursor: default;
-          transition: border-color 0.2s, color 0.2s;
-        }
-        .action-chip.primary {
-          border-color: var(--accent-from);
-          color: var(--accent-from);
-          background: rgba(99,102,241,0.08);
-        }
-
-        /* ── Skeleton rows ── */
-        .skeleton-card {
-          padding: 1.5rem 1.25rem;
-          border-radius: 1.25rem;
-          border: 1px solid var(--glass-border);
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
         }
       `}</style>
-
-      <div className="dash-root">
-
-        {/* ── Navbar ── */}
-        <nav className="dash-nav" aria-label="Main navigation">
-          <a className="nav-logo" href="/dashboard" aria-label="MusicSheets home">
-            <div className="nav-logo-icon" aria-hidden="true">🎵</div>
-            <span className="nav-logo-name gradient-text">MusicSheets</span>
-          </a>
-
-          <div className="nav-right">
-            {!loading && user && (
-              <span className="nav-user">
-                Signed in as <span>{user.name}</span>
-              </span>
-            )}
-            <button
-              id="logout-btn"
-              type="button"
-              className="btn-logout"
-              onClick={handleLogout}
-            >
-              <span aria-hidden="true">↩</span> Log out
-            </button>
-          </div>
-        </nav>
-
-        {/* ── Main ── */}
-        <main className="dash-main">
-
-          {/* Hero */}
-          <section aria-label="Welcome" className="dash-hero">
-            {loading ? (
-              <>
-                <Skeleton width="120px" height="0.875rem" />
-                <Skeleton width="260px" height="2rem" />
-                <Skeleton width="180px" height="0.9rem" />
-              </>
-            ) : (
-              <>
-                <p className="dash-welcome">Welcome back</p>
-                <h1 className="dash-name gradient-text">{user?.name}</h1>
-                <p className="dash-email">{user?.email}</p>
-              </>
-            )}
-          </section>
-
-          {/* Quick actions */}
-          <section aria-label="Quick actions">
-            <div className="section-header">
-              <h2 className="section-title">Quick actions</h2>
-            </div>
-            <div className="quick-actions">
-              <span className="action-chip primary">🎹 Transcribe audio</span>
-              <span className="action-chip">📤 Upload sheet</span>
-              <span className="action-chip">🔍 Browse library</span>
-            </div>
-          </section>
-
-          {/* Music sheets */}
-          <section aria-label="Your music sheets">
-            <div className="section-header">
-              <h2 className="section-title">Your sheets</h2>
-              <span className="section-badge">0 sheets</span>
-            </div>
-
-            {loading ? (
-              <div className="sheets-grid">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="skeleton-card">
-                    <Skeleton width="48px" height="48px" />
-                    <Skeleton width="70%" height="0.875rem" />
-                    <Skeleton height="0.75rem" />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="empty-state" role="status">
-                <span className="empty-icon" aria-hidden="true">🎼</span>
-                <p className="empty-title">No sheets yet</p>
-                <p className="empty-sub">
-                  Your transcribed music sheets will appear here.
-                  <br />Upload audio to get started.
-                </p>
-              </div>
-            )}
-          </section>
-
-          {/* Sample cards — shown when not loading (placeholder demo) */}
-          {!loading && (
-            <section aria-label="Featured examples">
-              <div className="section-header">
-                <h2 className="section-title">Example sheets</h2>
-                <span className="section-badge">Demo</span>
-              </div>
-              <div className="sheets-grid">
-                <SheetCard icon="🎹" title="Moonlight Sonata" subtitle="Beethoven · 3 pages" />
-                <SheetCard icon="🎵" title="Clair de Lune" subtitle="Debussy · 5 pages" />
-                <SheetCard icon="🎶" title="Für Elise" subtitle="Beethoven · 2 pages" />
-                <SheetCard icon="🎼" title="Nocturne Op.9" subtitle="Chopin · 4 pages" />
-              </div>
-            </section>
-          )}
-
-        </main>
-      </div>
-    </>
+    </div>
   );
 }

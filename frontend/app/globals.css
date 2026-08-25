@@ -25,6 +25,27 @@
   --error:         #f87171;
   --error-bg:      rgba(248, 113, 113, 0.1);
 
+  /* Status badges */
+  --status-ready-bg:       rgba(34, 197, 94, 0.12);
+  --status-ready-border:   rgba(34, 197, 94, 0.3);
+  --status-ready-text:     #4ade80;
+
+  --status-processing-bg:  rgba(251, 191, 36, 0.12);
+  --status-processing-border: rgba(251, 191, 36, 0.3);
+  --status-processing-text: #fbbf24;
+
+  --status-exported-bg:    rgba(99, 102, 241, 0.12);
+  --status-exported-border: rgba(99, 102, 241, 0.35);
+  --status-exported-text:  #818cf8;
+
+  --status-failed-bg:      rgba(248, 113, 113, 0.12);
+  --status-failed-border:  rgba(248, 113, 113, 0.3);
+  --status-failed-text:    #f87171;
+
+  /* Sidebar */
+  --sidebar-width:     260px;
+  --topbar-height:     64px;
+
   /* Transitions */
   --ease-default:  cubic-bezier(0.4, 0, 0.2, 1);
 }
