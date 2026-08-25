@@ -7,7 +7,7 @@ from typing import Optional
 
 from fastapi import Cookie, Depends, HTTPException, status
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -21,19 +21,20 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 COOKIE_NAME = "access_token"
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 # ---------------------------------------------------------------------------
-# Password helpers
+# Password helpers (using bcrypt directly for compatibility with bcrypt 4.1+/5.0)
 # ---------------------------------------------------------------------------
 
 def hash_password(plain: str) -> str:
-    return pwd_context.hash(plain)
+    pwd_bytes = plain.encode('utf-8')[:72]
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(pwd_bytes, salt).decode('utf-8')
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    pwd_bytes = plain.encode('utf-8')[:72]
+    return bcrypt.checkpw(pwd_bytes, hashed.encode('utf-8'))
 
 
 # ---------------------------------------------------------------------------
