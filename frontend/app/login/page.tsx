@@ -114,17 +114,17 @@ export default function LoginPage() {
            RIGHT PANEL — auth card
         ══════════════════════════════ */
         .lp-right {
-          width: 480px;
+          width: 560px;
           flex-shrink: 0;
           display: flex;
           align-items: center;
           justify-content: center;
           background: #ffffff;
-          padding: 2.5rem 2rem;
+          padding: 2.5rem 2.5rem;
         }
         .lp-card {
           width: 100%;
-          max-width: 400px;
+          max-width: 500px;
           display: flex;
           flex-direction: column;
           gap: 1.75rem;
@@ -314,6 +314,7 @@ export default function LoginPage() {
             fill
             className="lp-left-img"
             priority
+            quality={100}
             sizes="50vw"
           />
           <div className="lp-left-overlay" />
