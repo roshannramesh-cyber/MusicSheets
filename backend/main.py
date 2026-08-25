@@ -12,7 +12,7 @@ from typing import Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Response, status
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from sqlalchemy.orm import Session
 
 from auth import (
@@ -48,15 +48,52 @@ app.add_middleware(
 # Pydantic schemas
 # ---------------------------------------------------------------------------
 
+# Allowed email domains — only well-known providers accepted
+_ALLOWED_DOMAINS = {
+    "gmail.com", "googlemail.com",
+    "outlook.com", "hotmail.com", "live.com", "msn.com",
+    "yahoo.com", "yahoo.co.in", "yahoo.co.uk", "ymail.com",
+    "icloud.com", "me.com", "mac.com",
+    "protonmail.com", "protonmail.ch", "pm.me",
+    "zoho.com",
+    "aol.com",
+    "mail.com",
+    "gmx.com", "gmx.net",
+    "rediffmail.com",
+    "in.com",
+}
+
+
+def _check_domain(v: str) -> str:
+    v = v.strip().lower()
+    domain = v.split("@")[-1] if "@" in v else ""
+    if domain not in _ALLOWED_DOMAINS:
+        raise ValueError(
+            "Please use a valid email provider "
+            "(Gmail, Outlook, Yahoo, iCloud, ProtonMail, etc.)."
+        )
+    return v
+
+
 class RegisterRequest(BaseModel):
     email: EmailStr
     name: str
     password: str
 
+    @field_validator("email", mode="before")
+    @classmethod
+    def email_must_be_valid(cls, v: str) -> str:
+        return _check_domain(v)
+
 
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def email_must_be_valid(cls, v: str) -> str:
+        return _check_domain(v)
 
 
 class UserResponse(BaseModel):

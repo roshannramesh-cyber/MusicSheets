@@ -16,10 +16,16 @@ async function registerUser(name: string, email: string, password: string) {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err?.detail ?? "Registration failed");
+    // Pydantic validation errors return detail as an array of {msg, loc} objects
+    const detail = err?.detail;
+    if (Array.isArray(detail)) {
+      throw new Error(detail.map((d: { msg: string }) => d.msg).join(" "));
+    }
+    throw new Error(typeof detail === "string" ? detail : "Registration failed");
   }
   return res.json();
 }
+
 
 export default function LoginPage() {
   const { login } = useAuth();
