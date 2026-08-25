@@ -7,7 +7,7 @@ from typing import Optional
 
 from fastapi import Cookie, Depends, HTTPException, status
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -24,7 +24,7 @@ COOKIE_NAME = "access_token"
 import bcrypt
 
 # ---------------------------------------------------------------------------
-# Password helpers
+# Password helpers (using bcrypt directly for compatibility with bcrypt 4.1+/5.0)
 # ---------------------------------------------------------------------------
 
 def hash_password(plain: str) -> str:
